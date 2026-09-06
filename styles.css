@@ -1,0 +1,325 @@
+:root {
+  --paper: #f3ead7;
+  --ink: #1f1a14;
+  --muted: #6b5e4e;
+  --line: rgba(31, 26, 20, 0.14);
+  --copper: #b4532a;
+  --copper-dark: #8c3c1c;
+  --forest: #2c4a3e;
+  --card: rgba(255, 250, 241, 0.86);
+  --shadow: 0 24px 60px rgba(47, 32, 18, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: "Figtree", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 12% 18%, rgba(180, 83, 42, 0.16), transparent 32%),
+    radial-gradient(circle at 88% 8%, rgba(44, 74, 62, 0.18), transparent 28%),
+    linear-gradient(180deg, #efe4cc 0%, var(--paper) 42%, #e7dcc4 100%);
+}
+
+.hidden {
+  display: none !important;
+}
+
+h1, h2 {
+  font-family: "Fraunces", serif;
+  font-optical-sizing: auto;
+  margin: 0;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  color: var(--copper-dark);
+  font-weight: 700;
+}
+
+.lede, .user-label, .status, .empty {
+  color: var(--muted);
+}
+
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1rem;
+}
+
+.auth-card,
+.composer,
+.board,
+.stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+.auth-card {
+  width: min(440px, 100%);
+  padding: 2.2rem;
+  border-radius: 28px;
+}
+
+.brand-mark {
+  width: 72px;
+  height: 72px;
+  position: relative;
+  margin-bottom: 1.2rem;
+}
+
+.brand-mark.compact {
+  width: 48px;
+  height: 48px;
+  margin: 0;
+}
+
+.ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--copper);
+  border-radius: 50%;
+}
+
+.ring-mid {
+  inset: 12px;
+  border-color: var(--forest);
+}
+
+.ring-core {
+  inset: 24px;
+  background: var(--copper);
+  border: 0;
+}
+
+.compact .ring-mid { inset: 8px; }
+.compact .ring-core { inset: 16px; }
+
+.auth-card h1,
+.brand h1 {
+  font-size: 2.4rem;
+  line-height: 1.05;
+}
+
+.lede {
+  margin: 0.75rem 0 1.4rem;
+  line-height: 1.5;
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+input, select, textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: #fffaf2;
+  color: var(--ink);
+  border-radius: 12px;
+  padding: 0.75rem 0.85rem;
+  font: inherit;
+}
+
+textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.auth-form,
+.composer {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.auth-actions,
+.board-head,
+.session,
+.brand,
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.btn {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.75rem 1.1rem;
+}
+
+.btn.primary {
+  background: var(--copper);
+  color: #fff8ee;
+}
+
+.btn.ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.btn.text {
+  background: none;
+  color: var(--forest);
+  padding-left: 0;
+}
+
+.app-shell {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 1.5rem 0 3rem;
+}
+
+.topbar {
+  margin-bottom: 1.5rem;
+}
+
+.brand {
+  justify-content: flex-start;
+}
+
+.user-label {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+
+.stat {
+  padding: 1rem 1.1rem;
+  border-radius: 20px;
+}
+
+.stat p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.stat strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-family: "Fraunces", serif;
+  font-size: 1.8rem;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.composer,
+.board {
+  padding: 1.2rem;
+  border-radius: 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.job-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.job-card {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  background: #fffaf2;
+}
+
+.job-card header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+}
+
+.job-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(44, 74, 62, 0.12);
+  color: var(--forest);
+}
+
+.badge.high {
+  background: rgba(180, 83, 42, 0.16);
+  color: var(--copper-dark);
+}
+
+.meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+.status {
+  min-height: 1.2rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.88rem;
+}
+
+.empty {
+  display: none;
+}
+
+.empty.visible {
+  display: block;
+}
+
+@media (max-width: 900px) {
+  .stats,
+  .workspace,
+  .grid,
+  .topbar,
+  .auth-actions {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .workspace {
+    display: grid;
+  }
+}

@@ -1,0 +1,175 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: maintenance_scenarios
+    // Document ID: owner uid + "-" + scenarioId (e.g. "abc123-1")
+    // Fields:
+    //   - uid: string (required, immutable) - owner Firebase Auth UID
+    //   - scenarioId: number (required, immutable, 1-1000)
+    //   - vehicleType: string enum sedan|suv|truck|van|motorcycle
+    //   - maintenanceType: string enum oil_change|brake_service|tire_rotation|
+    //       battery_check|air_filter|coolant_flush|transmission_service|
+    //       alignment|spark_plugs|inspection
+    //   - status: string enum scheduled|in_progress|completed|cancelled
+    //   - priority: string enum low|medium|high
+    //   - intervalMiles: number (required, 1-200000)
+    //   - estimatedCost: number (required, 0-100000)
+    //   - notes: string (required, 1-500 chars)
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: web_clicks
+    // Document ID: auto-id
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - message: string (required, 1-500)
+    //   - clicked_at: timestamp (required, immutable)
+    //
+    // Collection: users_test
+    // Document ID: auto-id
+    // Fields:
+    //   - uid: string (required, immutable)
+    //   - app_name: string (required, 1-80)
+    //   - developer: string (required, 1-80)
+    //   - connected_at: timestamp (required, immutable)
+    //
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function uidMatchesAuth() {
+      return request.resource.data.uid is string
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.uid.size() > 0
+        && request.resource.data.uid.size() < 128;
+    }
+
+    function uidNotModified() {
+      return request.resource.data.uid == resource.data.uid;
+    }
+
+    function validString(field, minLen, maxLen) {
+      return request.resource.data[field] is string
+        && request.resource.data[field].size() >= minLen
+        && request.resource.data[field].size() <= maxLen;
+    }
+
+    function isRecentTimestamp(time) {
+      return time is timestamp
+        && time > request.time - duration.value(5, 'm')
+        && time <= request.time + duration.value(1, 'm');
+    }
+
+    function createdAtUnchanged() {
+      return request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function isValidMaintenance(data) {
+      return hasRequiredFields([
+          'uid', 'scenarioId', 'vehicleType', 'maintenanceType',
+          'status', 'priority', 'intervalMiles', 'estimatedCost',
+          'notes', 'createdAt'
+        ])
+        && hasOnlyAllowedFields([
+          'uid', 'scenarioId', 'vehicleType', 'maintenanceType',
+          'status', 'priority', 'intervalMiles', 'estimatedCost',
+          'notes', 'createdAt'
+        ])
+        && uidMatchesAuth()
+        && data.scenarioId is number
+        && data.scenarioId >= 1
+        && data.scenarioId <= 1000
+        && data.vehicleType in ['sedan', 'suv', 'truck', 'van', 'motorcycle']
+        && data.maintenanceType in [
+          'oil_change', 'brake_service', 'tire_rotation', 'battery_check',
+          'air_filter', 'coolant_flush', 'transmission_service', 'alignment',
+          'spark_plugs', 'inspection'
+        ]
+        && data.status in ['scheduled', 'in_progress', 'completed', 'cancelled']
+        && data.priority in ['low', 'medium', 'high']
+        && data.intervalMiles is number
+        && data.intervalMiles >= 1
+        && data.intervalMiles <= 200000
+        && data.estimatedCost is number
+        && data.estimatedCost >= 0
+        && data.estimatedCost <= 100000
+        && validString('notes', 1, 500)
+        && data.createdAt is timestamp;
+    }
+
+    function validMaintenanceStatusTransition() {
+      let previousStatus = resource.data.status;
+      let newStatus = request.resource.data.status;
+      return previousStatus == newStatus
+        || (previousStatus == 'scheduled' && newStatus in ['in_progress', 'cancelled'])
+        || (previousStatus == 'in_progress' && newStatus in ['completed', 'cancelled']);
+    }
+
+    function isValidWebClick(data) {
+      return hasRequiredFields(['uid', 'message', 'clicked_at'])
+        && hasOnlyAllowedFields(['uid', 'message', 'clicked_at'])
+        && uidMatchesAuth()
+        && validString('message', 1, 500)
+        && data.clicked_at is timestamp;
+    }
+
+    function isValidUsersTest(data) {
+      return hasRequiredFields(['uid', 'app_name', 'developer', 'connected_at'])
+        && hasOnlyAllowedFields(['uid', 'app_name', 'developer', 'connected_at'])
+        && uidMatchesAuth()
+        && validString('app_name', 1, 80)
+        && validString('developer', 1, 80)
+        && data.connected_at is timestamp;
+    }
+
+    match /maintenance_scenarios/{docId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated()
+        && isValidMaintenance(request.resource.data)
+        && isRecentTimestamp(request.resource.data.createdAt);
+      allow update: if isAuthenticated()
+        && resource.data.uid == request.auth.uid
+        && isValidMaintenance(request.resource.data)
+        && uidNotModified()
+        && request.resource.data.scenarioId == resource.data.scenarioId
+        && createdAtUnchanged()
+        && validMaintenanceStatusTransition();
+      allow delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+    }
+
+    match /web_clicks/{docId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated()
+        && isValidWebClick(request.resource.data)
+        && isRecentTimestamp(request.resource.data.clicked_at);
+      allow update, delete: if false;
+    }
+
+    match /users_test/{docId} {
+      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow create: if isAuthenticated()
+        && isValidUsersTest(request.resource.data)
+        && isRecentTimestamp(request.resource.data.connected_at);
+      allow update, delete: if false;
+    }
+  }
+}

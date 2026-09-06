@@ -3,12 +3,165 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CoverScope</title>
+  <title>CoverScope — Maintenance coverage at a glance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
-  <h1>Welcome to CoverScope</h1>
-  <button id="testBtn">Send Web Click to Firestore</button>
-  <p id="status"></p>
+  <div id="auth-screen" class="auth-shell">
+    <div class="auth-card">
+      <div class="brand-mark" aria-hidden="true">
+        <span class="ring ring-outer"></span>
+        <span class="ring ring-mid"></span>
+        <span class="ring ring-core"></span>
+      </div>
+      <p class="eyebrow">Fleet coverage desk</p>
+      <h1>CoverScope</h1>
+      <p class="lede">See every service window before it turns into a claim. Sign in to track oil, brakes, inspections, and the rest of the thousand-scenario board.</p>
+
+      <form id="auth-form" class="auth-form">
+        <label>
+          Email
+          <input id="auth-email" type="email" autocomplete="email" required placeholder="you@shop.com">
+        </label>
+        <label>
+          Password
+          <input id="auth-password" type="password" autocomplete="current-password" required minlength="6" placeholder="At least 6 characters">
+        </label>
+        <div class="auth-actions">
+          <button type="submit" id="sign-in-btn" class="btn primary">Sign in</button>
+          <button type="button" id="sign-up-btn" class="btn ghost">Create account</button>
+        </div>
+      </form>
+      <button type="button" id="guest-btn" class="btn text">Continue as guest</button>
+      <p id="auth-status" class="status" role="status"></p>
+    </div>
+  </div>
+
+  <div id="app-screen" class="app-shell hidden">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark compact" aria-hidden="true">
+          <span class="ring ring-outer"></span>
+          <span class="ring ring-mid"></span>
+          <span class="ring ring-core"></span>
+        </div>
+        <div>
+          <p class="eyebrow">CoverScope</p>
+          <h1>Maintenance coverage</h1>
+        </div>
+      </div>
+      <div class="session">
+        <p id="user-label" class="user-label"></p>
+        <button type="button" id="sign-out-btn" class="btn ghost">Sign out</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="stats" aria-label="Coverage summary">
+        <article class="stat">
+          <p>Scheduled</p>
+          <strong id="stat-scheduled">0</strong>
+        </article>
+        <article class="stat">
+          <p>In progress</p>
+          <strong id="stat-progress">0</strong>
+        </article>
+        <article class="stat">
+          <p>Completed</p>
+          <strong id="stat-completed">0</strong>
+        </article>
+        <article class="stat">
+          <p>Open cost</p>
+          <strong id="stat-cost">$0</strong>
+        </article>
+      </section>
+
+      <section class="workspace">
+        <form id="job-form" class="composer">
+          <h2>Log a coverage item</h2>
+          <div class="grid">
+            <label>
+              Vehicle
+              <select id="vehicle-type" required>
+                <option value="sedan">Sedan</option>
+                <option value="suv">SUV</option>
+                <option value="truck">Truck</option>
+                <option value="van">Van</option>
+                <option value="motorcycle">Motorcycle</option>
+              </select>
+            </label>
+            <label>
+              Service
+              <select id="maintenance-type" required>
+                <option value="oil_change">Oil change</option>
+                <option value="brake_service">Brake service</option>
+                <option value="tire_rotation">Tire rotation</option>
+                <option value="battery_check">Battery check</option>
+                <option value="air_filter">Air filter</option>
+                <option value="coolant_flush">Coolant flush</option>
+                <option value="transmission_service">Transmission</option>
+                <option value="alignment">Alignment</option>
+                <option value="spark_plugs">Spark plugs</option>
+                <option value="inspection">Inspection</option>
+              </select>
+            </label>
+            <label>
+              Status
+              <select id="job-status">
+                <option value="scheduled">Scheduled</option>
+                <option value="in_progress">In progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </label>
+            <label>
+              Priority
+              <select id="job-priority">
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+                <option value="high">High</option>
+              </select>
+            </label>
+            <label>
+              Interval (miles)
+              <input id="interval-miles" type="number" min="1" max="200000" value="5000" required>
+            </label>
+            <label>
+              Estimated cost
+              <input id="estimated-cost" type="number" min="0" max="100000" step="1" value="89" required>
+            </label>
+          </div>
+          <label>
+            Notes
+            <textarea id="job-notes" maxlength="500" required placeholder="What should the shop watch for?">Factory interval service — confirm coverage before the visit.</textarea>
+          </label>
+          <button type="submit" class="btn primary">Save to coverage board</button>
+          <p id="job-status-msg" class="status" role="status"></p>
+        </form>
+
+        <section class="board">
+          <div class="board-head">
+            <h2>Coverage board</h2>
+            <label class="filter">
+              Filter
+              <select id="status-filter">
+                <option value="all">All statuses</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="in_progress">In progress</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </label>
+          </div>
+          <ul id="job-list" class="job-list"></ul>
+          <p id="empty-board" class="empty">No coverage items yet. Log the first service on the left.</p>
+        </section>
+      </section>
+    </main>
+  </div>
 
   <script type="module" src="./app.js"></script>
 </body>
