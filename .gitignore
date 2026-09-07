@@ -7,3 +7,4 @@ storage-debug.log
 auth-debug.log
 .emulator
 coverage
+.firestore-analysis.json

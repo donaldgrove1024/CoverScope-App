@@ -5,8 +5,10 @@ service cloud.firestore {
     // Assumed Data Model
     // ===============================================================
     //
+    // This security rules file assumes the following data structures:
+    //
     // Collection: maintenance_scenarios
-    // Document ID: owner uid + "-" + scenarioId (e.g. "abc123-1")
+    // Document ID: {auth.uid}-{scenarioId}
     // Fields:
     //   - uid: string (required, immutable) - owner Firebase Auth UID
     //   - scenarioId: number (required, immutable, 1-1000)
@@ -48,6 +50,10 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    function isDocOwner() {
+      return isOwner(resource.data.uid);
+    }
+
     function hasOnlyAllowedFields(fields) {
       return request.resource.data.keys().hasOnly(fields);
     }
@@ -61,6 +67,10 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.uid.size() > 0
         && request.resource.data.uid.size() < 128;
+    }
+
+    function uidUnchanged() {
+      return request.resource.data.uid == request.auth.uid;
     }
 
     function uidNotModified() {
@@ -81,6 +91,13 @@ service cloud.firestore {
 
     function createdAtUnchanged() {
       return request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function maintenanceDocIdOwned(docId) {
+      return isAuthenticated()
+        && docId.size() > request.auth.uid.size() + 1
+        && docId[0:request.auth.uid.size()] == request.auth.uid
+        && docId[request.auth.uid.size()] == '-';
     }
 
     function isValidMaintenance(data) {
@@ -142,34 +159,42 @@ service cloud.firestore {
     }
 
     match /maintenance_scenarios/{docId} {
-      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow read: if isDocOwner();
       allow create: if isAuthenticated()
+        && maintenanceDocIdOwned(docId)
         && isValidMaintenance(request.resource.data)
+        && uidUnchanged()
         && isRecentTimestamp(request.resource.data.createdAt);
-      allow update: if isAuthenticated()
-        && resource.data.uid == request.auth.uid
+      allow update: if isDocOwner()
+        && maintenanceDocIdOwned(docId)
         && isValidMaintenance(request.resource.data)
         && uidNotModified()
         && request.resource.data.scenarioId == resource.data.scenarioId
         && createdAtUnchanged()
         && validMaintenanceStatusTransition();
-      allow delete: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow delete: if isDocOwner();
     }
 
     match /web_clicks/{docId} {
-      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow read: if isDocOwner();
       allow create: if isAuthenticated()
         && isValidWebClick(request.resource.data)
+        && uidUnchanged()
         && isRecentTimestamp(request.resource.data.clicked_at);
       allow update, delete: if false;
     }
 
     match /users_test/{docId} {
-      allow read: if isAuthenticated() && resource.data.uid == request.auth.uid;
+      allow read: if isDocOwner();
       allow create: if isAuthenticated()
         && isValidUsersTest(request.resource.data)
+        && uidUnchanged()
         && isRecentTimestamp(request.resource.data.connected_at);
       allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
