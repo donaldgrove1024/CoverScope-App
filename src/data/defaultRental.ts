@@ -1,0 +1,151 @@
+import { RentalPropertySettings, RentalMaintenanceTicket } from '../types';
+
+export const DEFAULT_RENTAL_SETTINGS: RentalPropertySettings = {
+  enabled: true,
+  propertyNickname: 'Maplewood Rental Duplex / Residence',
+  propertyAddress: '1244 Maplewood Lane, Unit B, Dallas, TX 75001',
+  unitCount: 2,
+  managementCompany: 'Lone Star Premier Property Management',
+  pmName: 'Marcus Vance (Property Manager)',
+  pmEmail: 'maintenance@lonestarpm-tx.com',
+  pmPhone: '(214) 555-0192',
+  emergencyPhone: '(214) 555-9110',
+  genericAccessCode: 'RENT-MAPLE-750',
+  genericAccessUrlSlug: 'maplewood-1244',
+  autoDispatchWarrantyIfCovered: true,
+  requireLandlordApprovalAbove: 125, // Auto-dispatch if $100 trade fee or under $125
+  activeTenants: [
+    {
+      id: 'tenant-1',
+      name: 'Jessica Reynolds & Ryan Davis',
+      unitNumber: 'Unit B',
+      email: 'jess.reynolds@example.com',
+      phone: '(214) 555-8491',
+      leaseEndDate: '2027-04-30',
+      occupiedSince: '2024-05-01',
+    },
+  ],
+  notesForTenants:
+    'For emergency water leaks, first shut off the main water valve under the front hose bib. For HVAC or appliance issues, CoverScope will instantly check our active American Home Shield warranty to dispatch certified service technicians.',
+};
+
+export const DEFAULT_RENTAL_TICKETS: RentalMaintenanceTicket[] = [
+  {
+    id: 'tkt-2026-081',
+    ticketNumber: 'TKT-8849',
+    propertyAddress: '1244 Maplewood Lane, Unit B, Dallas, TX 75001',
+    unitNumber: 'Unit B',
+    reportedBy: {
+      name: 'Jessica Reynolds',
+      phone: '(214) 555-8491',
+      email: 'jess.reynolds@example.com',
+      role: 'TENANT',
+    },
+    createdAt: '2026-08-22 14:30',
+    category: 'HVAC',
+    applianceOrArea: 'Central Air Conditioning (Blower & Condenser)',
+    symptomDescription:
+      'A/C blowing lukewarm air during afternoon peak heat. Thermostat set to 72°F but indoor temperature reads 81°F. Condenser outside fan is spinning, but copper line is not sweating or cold.',
+    urgency: 'URGENT_2_3_DAYS',
+    photos: [
+      'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&auto=format&fit=crop&q=80',
+    ],
+    isCoveredByWarranty: true,
+    warrantyCoverageExplanation:
+      'Covered under American Home Shield ShieldGold Plan (Section 4.1: HVAC Systems). The system mechanical breakdown qualifies for the standard $100 Trade Service Call Fee without landlord out-of-pocket repair costs.',
+    responsibility: 'WARRANTY_ELIGIBLE',
+    status: 'WARRANTY_DISPATCHED',
+    estimatedCostRange: '$100 Service Call (Estimated non-warranty retail: $850 - $1,400)',
+    tradeFeeAmount: 100,
+    warrantyProviderName: 'American Home Shield (ShieldGold)',
+    landlordApproved: true,
+    landlordApprovalNotes: 'Auto-approved via Landlord Autonomous Warranty Rule (Trade fee $100).',
+    assignedContractor: 'All-Star Heating & Air LLC (AHS Network Pro)',
+    scheduledServiceDate: 'Tomorrow, Aug 24 (8:00 AM - 12:00 PM)',
+    timeline: [
+      {
+        id: 'tl-1',
+        timestamp: '2026-08-22 14:30',
+        title: 'Tenant Submitted Ticket via Generic Portal',
+        notes: 'Jessica Reynolds reported lukewarm HVAC output using access code RENT-MAPLE-750.',
+        updatedBy: 'Tenant Portal',
+        type: 'status',
+      },
+      {
+        id: 'tl-2',
+        timestamp: '2026-08-22 14:31',
+        title: 'CoverScope AI Coverage Triage Completed',
+        notes: 'Determined 95% likelihood of full warranty coverage under AHS ShieldGold HVAC clause. Identified potential capacitor or refrigerant metering valve issue.',
+        updatedBy: 'CoverScope AI',
+        type: 'status',
+      },
+      {
+        id: 'tl-3',
+        timestamp: '2026-08-22 14:35',
+        title: 'Warranty Claim Dispatched',
+        notes: 'Claim submitted to American Home Shield. Dispatched to All-Star Heating & Air with tenant contact details for appointment access.',
+        updatedBy: 'Auto-Dispatch Service',
+        type: 'dispatch',
+      },
+    ],
+  },
+  {
+    id: 'tkt-2026-079',
+    ticketNumber: 'TKT-8832',
+    propertyAddress: '1244 Maplewood Lane, Unit B, Dallas, TX 75001',
+    unitNumber: 'Unit B',
+    reportedBy: {
+      name: 'Ryan Davis',
+      phone: '(214) 555-8491',
+      email: 'ryan.davis@example.com',
+      role: 'TENANT',
+    },
+    createdAt: '2026-08-18 09:15',
+    category: 'Kitchen Appliances',
+    applianceOrArea: 'Dishwasher (Bosch 300 Series)',
+    symptomDescription:
+      'Dishwasher E15 error code displayed on control panel. Basin bottom has 2 inches of standing murky water that will not drain after cycle.',
+    urgency: 'ROUTINE',
+    photos: [
+      'https://images.unsplash.com/photo-1585338107529-13afc5f02586?w=500&auto=format&fit=crop&q=80',
+    ],
+    isCoveredByWarranty: true,
+    warrantyCoverageExplanation:
+      'Covered under American Home Shield ShieldGold Kitchen Appliance Package. E15 leak sensor/drain pump mechanical failure qualifies for warranty replacement or repair.',
+    responsibility: 'WARRANTY_ELIGIBLE',
+    status: 'COMPLETED',
+    estimatedCostRange: '$100 Service Call (Retail drain pump replacement: $320)',
+    tradeFeeAmount: 100,
+    warrantyProviderName: 'American Home Shield',
+    landlordApproved: true,
+    landlordApprovalNotes: 'Landlord Donald Grove approved $100 copay on 08/18.',
+    assignedContractor: 'Metro Appliance Repair Pro',
+    scheduledServiceDate: '2026-08-19',
+    timeline: [
+      {
+        id: 'tl-d1',
+        timestamp: '2026-08-18 09:15',
+        title: 'Maintenance Request Created',
+        notes: 'Tenant logged E15 error and standing water.',
+        updatedBy: 'Tenant Portal',
+        type: 'status',
+      },
+      {
+        id: 'tl-d2',
+        timestamp: '2026-08-18 10:00',
+        title: 'Landlord Approved Claim Dispatch',
+        notes: 'Donald Grove approved $100 service call fee.',
+        updatedBy: 'Landlord (Donald Grove)',
+        type: 'approval',
+      },
+      {
+        id: 'tl-d3',
+        timestamp: '2026-08-19 15:45',
+        title: 'Work Completed & Verified',
+        notes: 'Technician cleared drain impeller blockage and reset flood float sensor. Full test cycle completed successfully.',
+        updatedBy: 'Metro Appliance Repair',
+        type: 'status',
+      },
+    ],
+  },
+];

@@ -1,0 +1,11 @@
+{
+  "name": "CoverScope",
+  "description": "Multimodal AI assistant helping homeowners, landlords, and tenants determine warranty coverage, submit claims, manage rental maintenance, and track preventive care schedules.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
