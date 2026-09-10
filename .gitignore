@@ -8,3 +8,12 @@ coverage/
 .env.*
 .env.local
 !.env.example
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+pubsub-debug.log
+database-debug.log
+storage-debug.log
+auth-debug.log
+.emulator
+.firestore-analysis.json

@@ -1,4 +1,5 @@
 import { TriageVerdict, WarrantyPolicy } from '../types';
+import { evaluateCoverageStatus, recommendationForStatus } from './coverageLogic';
 
 export function generateClientSideTriageVerdict(params: {
   policy: WarrantyPolicy;
@@ -13,6 +14,7 @@ export function generateClientSideTriageVerdict(params: {
   rustOrCorrosionVisible?: boolean;
   waterLeakPresent?: boolean;
   diyAttempted?: boolean;
+  maintenanceRecordsAvailable?: boolean;
   clarifyingAnswers?: Record<string, string>;
   imagePreviewUrl?: string | null;
 }): TriageVerdict {
@@ -27,6 +29,7 @@ export function generateClientSideTriageVerdict(params: {
     rustOrCorrosionVisible = false,
     waterLeakPresent = false,
     diyAttempted = false,
+    maintenanceRecordsAvailable = true,
     imagePreviewUrl,
   } = params;
 
@@ -67,7 +70,15 @@ export function generateClientSideTriageVerdict(params: {
   else if (isWasherDryer) detectedName = 'Washer / Dryer';
   else if (isPlumbing) detectedName = 'Plumbing System';
 
-  let status: 'LIKELY_COVERED' | 'LIKELY_DENIED' | 'AMBIGUOUS' = 'LIKELY_COVERED';
+  let status = evaluateCoverageStatus({
+    policy,
+    category,
+    applianceOrPart,
+    rustOrCorrosionVisible,
+    preExistingSuspected,
+    diyAttempted,
+    maintenanceRecordsAvailable,
+  });
   let confidenceScore = 88;
   let failureMode = 'Standard Mechanical Wear & Tear';
   let severity: 'low' | 'medium' | 'high' | 'critical' = 'medium';
@@ -104,15 +115,9 @@ export function generateClientSideTriageVerdict(params: {
     failureMode = 'Drain Pump Impeller / Solenoid Valve Failure';
   }
 
-  // Exclusion Triggers
-  if (rustOrCorrosionVisible) {
-    status = 'LIKELY_DENIED';
-    confidenceScore = 92;
-  } else if (preExistingSuspected) {
-    status = 'LIKELY_DENIED';
-    confidenceScore = 85;
-  } else if (diyAttempted) {
-    status = 'AMBIGUOUS';
+  if (status === 'LIKELY_DENIED') {
+    confidenceScore = rustOrCorrosionVisible ? 92 : 85;
+  } else if (status === 'AMBIGUOUS') {
     confidenceScore = 72;
   }
 
@@ -171,10 +176,12 @@ export function generateClientSideTriageVerdict(params: {
     estimatedReplacementCost: replaceCost,
     netBenefitMin: Math.max(0, repMin - tradeFee),
     netBenefitMax: Math.max(0, repMax - tradeFee),
-    recommendation: (status === 'LIKELY_COVERED' ? 'SUBMIT_CLAIM' : 'PAY_OUT_OF_POCKET_OR_DIY') as any,
+    recommendation: recommendationForStatus(status),
     recommendationReason:
       status === 'LIKELY_COVERED'
         ? `Filing a claim saves an estimated $${repMin - tradeFee} to $${repMax - tradeFee} after the $${tradeFee} trade call fee.`
+        : status === 'AMBIGUOUS'
+        ? `Coverage is not certain until a licensed technician isolates the failed sub-assembly. Confirm diagnostics before risking the $${tradeFee} trade call fee.`
         : `Paying the $${tradeFee} non-refundable dispatch fee carries a high risk of total loss due to contract exclusions. Direct local repair is more cost-effective.`,
   };
 
@@ -220,6 +227,12 @@ export function generateClientSideTriageVerdict(params: {
       riskLevel: (rustOrCorrosionVisible ? 'CRITICAL' : 'LOW') as any,
       explanation: "Adjusters may classify internal mechanical wear as 'neglect' if superficial surface corrosion is noted.",
       preventativeAdvice: 'Wipe down any dust, water spots, or mineral scale from the outer cabinet and serial plate prior to technician arrival.',
+    },
+    {
+      trapName: 'Lack of Maintenance Trap',
+      riskLevel: (maintenanceRecordsAvailable ? 'LOW' : 'HIGH') as any,
+      explanation: 'Missing service receipts let the carrier argue neglect, restricted airflow, or sediment buildup voided coverage.',
+      preventativeAdvice: 'Upload dated HVAC filter, flush, and tune-up records before the technician arrives.',
     },
   ];
 

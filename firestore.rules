@@ -1,0 +1,127 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: maintenance_scenarios
+    // Document ID: {auth.uid}-{scenarioId}
+    // Fields:
+    //   - uid: string (required, immutable) - owner Firebase Auth UID
+    //   - scenarioId: number (required, immutable, 1-1000)
+    //   - category: string (required, 1-80 chars)
+    //   - applianceOrPart: string (required, 1-160 chars)
+    //   - symptomDescription: string (required, 1-500 chars)
+    //   - rustOrCorrosionVisible: bool (required)
+    //   - preExistingSuspected: bool (required)
+    //   - diyAttempted: bool (required)
+    //   - waterLeakPresent: bool (required)
+    //   - maintenanceRecordsAvailable: bool (required)
+    //   - policyId: string (required, 1-80 chars)
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isOwner(resource.data.uid);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function uidMatchesAuth() {
+      return request.resource.data.uid is string
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.uid.size() > 0
+        && request.resource.data.uid.size() < 128;
+    }
+
+    function uidNotModified() {
+      return request.resource.data.uid == resource.data.uid;
+    }
+
+    function validString(field, minLen, maxLen) {
+      return request.resource.data[field] is string
+        && request.resource.data[field].size() >= minLen
+        && request.resource.data[field].size() <= maxLen;
+    }
+
+    function validBool(field) {
+      return request.resource.data[field] is bool;
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    function maintenanceScenarioFields() {
+      return [
+        'uid',
+        'scenarioId',
+        'category',
+        'applianceOrPart',
+        'symptomDescription',
+        'rustOrCorrosionVisible',
+        'preExistingSuspected',
+        'diyAttempted',
+        'waterLeakPresent',
+        'maintenanceRecordsAvailable',
+        'policyId',
+        'createdAt'
+      ];
+    }
+
+    function isValidMaintenanceScenario() {
+      return hasOnlyAllowedFields(maintenanceScenarioFields())
+        && hasRequiredFields(maintenanceScenarioFields())
+        && uidMatchesAuth()
+        && request.resource.data.scenarioId is number
+        && request.resource.data.scenarioId == int(request.resource.data.scenarioId)
+        && request.resource.data.scenarioId >= 1
+        && request.resource.data.scenarioId <= 1000
+        && validString('category', 1, 80)
+        && validString('applianceOrPart', 1, 160)
+        && validString('symptomDescription', 1, 500)
+        && validBool('rustOrCorrosionVisible')
+        && validBool('preExistingSuspected')
+        && validBool('diyAttempted')
+        && validBool('waterLeakPresent')
+        && validBool('maintenanceRecordsAvailable')
+        && validString('policyId', 1, 80)
+        && request.resource.data.createdAt is timestamp;
+    }
+
+    match /maintenance_scenarios/{docId} {
+      allow read: if isDocOwner();
+      allow create: if isAuthenticated()
+        && isValidMaintenanceScenario()
+        && docId == request.auth.uid + '-' + string(int(request.resource.data.scenarioId));
+      allow update: if isDocOwner()
+        && isValidMaintenanceScenario()
+        && uidNotModified()
+        && areImmutableFieldsUnchanged(['uid', 'scenarioId', 'createdAt'])
+        && docId == request.auth.uid + '-' + string(int(request.resource.data.scenarioId));
+      allow delete: if isDocOwner();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
